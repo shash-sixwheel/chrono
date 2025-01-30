@@ -11,11 +11,6 @@
 // =============================================================================
 // Authors: Radu Serban, Rainer Gericke
 // =============================================================================
-//
-// Semitractor for the long haul vehicle model based on Kraz 64431 data
-//
-// =============================================================================
-
 #ifndef REVOY_H
 #define REVOY_H
 
@@ -31,40 +26,35 @@ namespace kraz {
 
 /// Revoy system.
 class CH_MODELS_API Revoy : public ChWheeledVehicle {
-  public:
-    Revoy(bool fixed,
-          CollisionType chassis_collision_type = CollisionType::NONE,
-          ChContactMethod contactMethod = ChContactMethod::NSC);
-    Revoy(ChSystem* system, bool fixed, CollisionType chassis_collision_type = CollisionType::NONE);
-    ~Revoy() {}
+public:
+  Revoy(CollisionType chassis_collision_type = CollisionType::NONE,
+        ChContactMethod contactMethod = ChContactMethod::NSC);
+  ~Revoy() {}
 
-    virtual unsigned int GetNumberAxles() const override { return 1; }
-    virtual double GetWheelbase() const override { return 4.78; }
+  virtual unsigned int GetNumberAxles() const override { return 1; }
+  virtual double GetWheelbase() const override { return 4.78; }
 
-    virtual void Initialize(std::shared_ptr<ChChassis> frontChassis,
-                            const ChCoordsys<>& chassisPos,
-                            double chassisFwdVel = 0);
+  using ChWheeledVehicle::Initialize;
+  virtual void Initialize(std::shared_ptr<ChChassis> frontChassis,
+                          const ChCoordsys<> &chassisPos,
+                          double chassisFwdVel = 0);
 
-    void DebugLog(int what);
+  double GetHitchTorque() const {
+    const double forceX = m_connector->GetHitchForceX();
+    const double wheelRadius = GetWheel(0, LEFT)->GetTire()->GetRadius();
+    /// NOTE: the negative on Force is required to make positive torque =
+    /// forward accel
+    return -forceX * wheelRadius;
+  };
 
-    double GetHitchTorque() const {
-      const double forceX = m_connector->GetHitchForce().x();
-      const double wheelRadius = GetWheel(0, LEFT)->GetTire()->GetRadius();
-      /// NOTE: the negative on Force is required to make positive torque =
-      /// forward accel
-      return -forceX * wheelRadius;
-    };
-
-  private:
-    void Create(bool fixed, CollisionType chassis_collision_type);
-
-    std::shared_ptr<Revoy_Chassis> m_chassis_as_rear;
-
-    std::shared_ptr<Revoy_Connector> m_connector;  ///< connector to pulling vehicle
+private:
+  void Create(CollisionType chassis_collision_type);
+  std::shared_ptr<Revoy_Chassis> m_chassis_as_rear;
+  std::shared_ptr<Revoy_Connector> m_connector;
 };
 
-}  // end namespace kraz
-}  // end namespace vehicle
-}  // end namespace chrono
+} // end namespace kraz
+} // end namespace vehicle
+} // end namespace chrono
 
 #endif
